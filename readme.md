@@ -1,13 +1,38 @@
 # Base de datos: cardinalidad, normalización, transformación de ER-Relacional y SQL.
 
 
+## Índice de Contenidos
+
+1. [**Cardinalidad de una relación**](#cardinalidad-de-una-relación)
+   - 1.1 [Cardinalidad 1:1](#cardinalidad-11)
+   - 1.2 [Cardinalidad 1:N](#cardinalidad-1n)
+   - 1.3 [Cardinalidad N:M](#cardinalidad-nm)
+   - 1.4 [Cardinalidad 0:1](#cardinalidad-01)
+   - 1.5 [Cardinalidad 0:N](#cardinalidad-0n)
+2. [**Definición de la cardinalidad de una base de datos**](#definición-de-la-cardinalidad-de-una-base-de-datos)
+3. [**Normalización de una base de datos**](#normalización-de-una-base-de-datos)
+   - 3.1 [Normalización 1FN](#normalización-1fn)
+   - 3.2 [Normalización 2FN](#normalización-2fn)
+   - 3.3 [Normalización 3FN](#normalización-3fn)
+   - 3.4 [Normalización Boyce-Codd](#normalización-boyce-codd)
+   - 3.5 [Cuarta forma normal](#cuarta-forma-normal)
+4. [**Transformaciones de entidad-relación a modelo relacional**](#transformaciones-de-entidad-relación-a-modelo-relacional)
+   - 4.1 [Caso de 1:1](#caso-de-11)
+   - 4.2 [Caso de 1:N](#caso-de-1n)
+   - 4.3 [Caso de N:M](#caso-de-nm)
+5. [**SQL**](#sql)
+6. [**Referencias**](#referencias)
+
+---
+
 ## Cardinalidad de una relación
 
-
 ### Cardinalidad 1:1
+
 Cuando un registro se relaciona sólamente con otro de otra tabla y viceversa.
 
 Ejemplo:
+
 - Una persona solo puede tener un pasaporte y uno pasaporte solo le pertenece a una sóla persona.
 
 Esto depende de igual manera el diseño de la base de datos, porque una persona puede tener varios pasaportes, como en el caso de que uno esta activo y el resto expirados o en el caso de que posea pasaportes de diferentes nacionalidades.
@@ -22,20 +47,18 @@ Esto depende de igual manera el diseño de la base de datos, porque una persona 
 
 ---
 
-
 ### Cardinalidad 1:N
+
 Un solo registro de una tabla A iene asociaciones con varios registros de la tabla B, los registros de la tabla B solo puede asociarse al registro de la tabla **A**.
 
 Ejemplo:
+
 - Un usuario tiene muchas cuentas.
 - Una compra les pertenece a un usuario
-
 
 <p align="center">
   <img src="img/onetomany.png" alt="Descripción" width="80%">
 </p>
-
-
 
 ### Cardinalidad N:M
 
@@ -52,6 +75,7 @@ Cuando varios registros de una tabla pueden relacionarse con varios registros de
 </p>
 
 ### Cardinalidad 0:1
+
 Se usa cuando una entidad puede o no tener una relación, y si la tiene, es solo una.
 
 - Una cuenta de red social solo puede tener una foto de perfil o no tener ninguna.
@@ -65,36 +89,61 @@ Se usa cuando una entidad puede no tener ninguna relación, o puede tener muchas
 
 - Una categoria creada puede no tener productos o puede estar asociada con muchos.
 
-
 ## Definición de la cardinalidad de una base de datos
+
+Para definir cual es la cardinalidad, primero tenemos que encontrar la `participación` de las entidades:
+
+Ejemplo
+
+- Un CLIENTE puede realizar muchos PEDIDOS
+
+- Un PEDIDO pertenece a un solo CLIENTE
+
+
+        1. Identificar las entidades (PEDIDOS Y CLIENTE)
+        2. Identificar la relación (Realiza o pertence)
+        3. Comprobar el mínimo y máximo de cada entidad.
+
+Si un cliente puede realizar un pedido o no, entonces su participación mínima es `0` y su puede hacer muchos pedidos su máximo es `N`.
+
+<p align="center">
+  <img src="img/def1.png" alt="Descripción" width="80%">
+</p>
+
+El resultado debe ser el siguiente:
+
+<p align="center">
+  <img src="img/def2.png" alt="Descripción" width="100%">
+</p>
+
 
 
 ## Normalización de una base de datos
 
 ### Normalización 1FN
 
-- Evitar grupos en a nivel de fila y columnas. 
+- Evitar grupos en a nivel de fila y columnas.
 - Evitar los valores no atómicos, como por ejemplo una columna con datos separas por comas:
 - Crear una tabla separada para cada grupo de registros de datos.
 - Cada registro debe ser identificado por una llave primaria.
 
 Valores no atómicos ❌:
 
-| id | nombre | teléfonos |
-| -- | ------ | --------- |
-| 1  | Ana    | 8888,9999 |
+| id  | nombre | teléfonos |
+| --- | ------ | --------- |
+| 1   | Ana    | 8888,9999 |
 
-Campos repetidos o multivaluados ❌: 
+Campos repetidos o multivaluados ❌:
 
 | id_persona | nombre | telefono1 | telefono2 | telefono3 |
 | ---------- | ------ | --------- | --------- | --------- |
 | 1          | Ana    | 8888      | 9999      | 7777      |
 
 Registros no tiene llave primaria ❌
-| nombre | correo                                |
+| nombre | correo |
 | ------ | ------------------------------------- |
-| Ana    | [ana@gmail.com](mailto:ana@gmail.com) |
-| Ana    | [ana@gmail.com](mailto:ana@gmail.com) |
+| Ana | [ana@gmail.com](mailto:ana@gmail.com) |
+| Ana | [ana@gmail.com](mailto:ana@gmail.com) |
 
 Ejemplo normalizado de una bd ✔️
 
@@ -111,7 +160,6 @@ Tabla `Teléfono`
 | 1                | 1               | 8888     |
 | 2                | 1               | 9999     |
 
-
 ### Normalización 2FN
 
 Si una clave principal es una clave compuesta, el atributo que no es clave debe depender de cada columna de esa clave compuesta.
@@ -120,9 +168,7 @@ Si una clave principal es una clave compuesta, el atributo que no es clave debe 
 - Identificar Claves Compuestas: Si tu tabla tiene una sola columna como PK (Clave Primaria), y ya está en 1FN, automáticamente está en 2FN.
 - Si hay una columna que no se relaciona con todas las columnas de la clave compuesta, no está en 2fn.
 
-
 Tabla con columna que depende parcialmente a la clave primaria ❌:
-
 
 | id_estudiante | id_curso | nombre_estudiante | nombre_curso | creditos |
 | ------------- | -------- | ----------------- | ------------ | -------- |
@@ -137,17 +183,16 @@ Tabla con columna que depende parcialmente a la clave primaria ❌:
 
 - Hay dependencia parcial → NO cumple 2FN
 
-
 Normalización a 2FN ✔️
 
-*Tabla estudiante*
+_Tabla estudiante_
 
 | id_estudiante | nombre_estudiante |
 | ------------- | ----------------- |
 | 1             | Juan Pérez        |
 | 2             | Ana López         |
 
-*Tabla curso*
+_Tabla curso_
 
 | id_curso | nombre_curso | creditos |
 | -------- | ------------ | -------- |
@@ -155,7 +200,7 @@ Normalización a 2FN ✔️
 | 102      | Física       | 3        |
 | 103      | Programación | 5        |
 
-*Tabla inscripción*
+_Tabla inscripción_
 
 | id_estudiante | id_curso |
 | ------------- | -------- |
@@ -172,17 +217,16 @@ Normalización a 2FN ✔️
 
 Ejemplo de dependencia transitiva ❌
 
-*Tabla departemento*
-| id_empleado | nombre       | id_departamento | nombre_departamento |
+_Tabla departemento_
+| id_empleado | nombre | id_departamento | nombre_departamento |
 | ----------- | ------------ | --------------- | ------------------- |
-| 1           | Juan Pérez   | 10              | Contabilidad        |
-| 2           | Ana López    | 20              | Recursos Humanos    |
-| 3           | Carlos Gómez | 10              | Contabilidad        |
-
+| 1 | Juan Pérez | 10 | Contabilidad |
+| 2 | Ana López | 20 | Recursos Humanos |
+| 3 | Carlos Gómez | 10 | Contabilidad |
 
 Normalización 3FN ✔️
 
-*Tabla empleado*
+_Tabla empleado_
 
 | id_empleado | nombre       | id_departamento |
 | ----------- | ------------ | --------------- |
@@ -190,17 +234,14 @@ Normalización 3FN ✔️
 | 2           | Ana López    | 20              |
 | 3           | Carlos Gómez | 10              |
 
-
-*Tabla departamento*
+_Tabla departamento_
 
 | id_departamento | nombre_departamento |
 | --------------- | ------------------- |
 | 10              | Contabilidad        |
 | 20              | Recursos Humanos    |
 
-
 ### Normalización Boyce-Codd
-
 
 En Boyce-Codd, si una columna no clave es única y determina a otras columnas, entonces debe tratarse como una clave candidata.
 
@@ -223,7 +264,6 @@ Un atributo o conjunto de atributos que identifica de forma única cada fila de 
 | id_usuario | correo | dni | nombre |
 | ---------- | ------ | --- | ------ |
 
-
 ### Cuarta forma normal
 
 Si A tiene muchos B y muchos C, y B no tiene relación con C, no los pongas juntos.
@@ -244,14 +284,12 @@ Corrección ✅
 | Juan     | 1111     |
 | Juan     | 2222     |
 
-
 | Empleado | Habilidad |
 | -------- | --------- |
 | Juan     | Java      |
 | Juan     | SQL       |
 
 ## Transformaciones de entidad-relación a modelo relacional
-
 
 ### Caso de 1:1:
 
@@ -266,6 +304,18 @@ Corrección ✅
   <img src="img/caso1_1.png" alt="Descripción" width="80%">
 </p>
 
+Entidad relación
+
+<p align="center">
+  <img src="img/caso1_4.png" alt="Descripción" width="80%">
+</p>
+
+Diagrama relacional
+
+<p align="center">
+  <img src="img/caso1_5.png" alt="Descripción" width="40%">
+</p>
+
 #### Segundo caso
 
 - Si un lado es 0:1 y el otro lado es 1:1.
@@ -274,43 +324,66 @@ Corrección ✅
 
 **Tabla 1: Entidad1Pk, Entidad2Atributos, `Entidad2Fk`**
 
-
 **Tabla 2: Entidad2Pk, Entidad2Atri**
-
 
 <p align="center">
   <img src="img/caso1_2.png" alt="Descripción" width="80%">
 </p>
 
+Modelo entidad-relación
+
+<p align="center">
+  <img src="img/caso1_6.png" alt="Descripción" width="80%">
+</p>
+
+Modelo relacional
+
+- En el caso de que a la hora de crear un usuario no permite no tener casillero (nulo).
+- Un casillero puede existir y todavía no ser asignado a un empleado.
+
+<p align="center">
+  <img src="img/caso1_7.png" alt="Descripción" width="80%">
+</p>
+
 #### Tercer caso
 
 - Cuando ambas relaciones son de 0:1.
+- Cuando la relación tiene atributos.
 - La relación se transforma en una tabla
 - La clave primaria seria una compuesta, sería la concatenación de las llaves primarias de ambas entidades.
 - Se forma 3 tablas al final.
-
-
-**Tabla 1: Entidad1Pk, Entidad1Atributos...**
-
-
-**Tabla 2: Entidad2Pk, Entidad2Atri...**
-
-**Relación: (Entidad1Pk, Entidad2Pk), AtributosDeLaRelación**
-
 
 <p align="center">
   <img src="img/caso1_3.png" alt="Descripción" width="80%">
 </p>
 
+**Tabla 1: Entidad1Pk, Entidad1Atributos...**
+
+**Tabla 2: Entidad2Pk, Entidad2Atri...**
+
+**Relación: (Entidad1Pk, Entidad2Pk), AtributosDeLaRelación**
+
+Modelo entidad-relación
+
+- Un usuario puede no tener una oficina o tener y una oficina puede no ser reservada.
+
+<p align="center">
+  <img src="img/caso1_8.png" alt="Descripción" width="80%">
+</p>
+
+Modelo relacional
+
+<p align="center">
+  <img src="img/caso1_9.png" alt="Descripción" width="80%">
+</p>
 
 ### Caso de 1:N
 
-- Debe ubicar la relación que tiene en como *1* en el máximo.
+- Debe ubicar la relación que tiene en como _1_ en el máximo.
 
 <p align="center">
   <img src="img/casoN_1.png" alt="Descripción" width="80%">
 </p>
-
 
 #### Caso 1
 
@@ -318,12 +391,10 @@ Corrección ✅
   <img src="img/casoN_2.png" alt="Descripción" width="80%">
 </p>
 
-
-
 - Ubicar la cardinalidad mínima que tiene el máximo 1 y si tiene como 1:1
-- Pasar la clave primaria de la cardinalidad mínima a la entidad con cardinalidad máxima *N* como foránea.
+- Pasar la clave primaria de la cardinalidad mínima a la entidad con cardinalidad máxima _N_ como foránea.
 
-- Los atributos de la relación pasa también a la cardinalidad máxima *N*.
+- Los atributos de la relación pasa también a la cardinalidad máxima _N_.
 
 - Al final quedan solo dos tablas
 
@@ -331,19 +402,28 @@ Corrección ✅
 
 **Tabla 2: PrimariaEnt2, PrimariaEnt1FK, AtributosDeLaRelación**.
 
+Modelo entidad-relación
+
+<p align="center">
+  <img src="img/casoN_4.png" alt="Descripción" width="80%">
+</p>
+
+Modelo relacional
+
+<p align="center">
+  <img src="img/casoN_5.png" alt="Descripción" width="80%">
+</p>
 
 #### Caso 2:
-
 
 <p align="center">
   <img src="img/casoN_3.png" alt="Descripción" width="80%">
 </p>
 
-
-- Si la relación mínima tiene como cardinalidad *0:1*.
-- La relación se vuelve una nueva tabla, la clave primaria de esta tabla va ser la clave primaria de la entidad que tiene como el máximo *N*.
-- Los atributos de la relación se mantiene y la entidad con la cardinalidad máximo *1* pasa a ser clave foránea de la nueva tabla.
--Ambas claves primarias de las entidades quedan como foráneas en la tabla nueva.
+- Si la relación mínima tiene como cardinalidad _0:1_.
+- La relación se vuelve una nueva tabla, la clave primaria de esta tabla va ser la clave primaria de la entidad que tiene como el máximo _N_.
+- Los atributos de la relación se mantiene y la entidad con la cardinalidad máximo _1_ pasa a ser clave foránea de la nueva tabla.
+  -Ambas claves primarias de las entidades quedan como foráneas en la tabla nueva.
 - Deben quedar 3 tablas.
 
 **Tabla 1: PrimariaEnt1**
@@ -352,17 +432,28 @@ Corrección ✅
 
 **Tabla relación: PrimariaEntFk2, atributos, primariaEntFk1**
 
+Modelo entidad-relación
 
+<p align="center">
+  <img src="img/casoN_6.png" alt="Descripción" width="80%">
+</p>
+
+Modelo relacional
+
+<p align="center">
+  <img src="img/casoN_7.png" alt="Descripción" width="80%">
+</p>
 
 ### Caso de N:M
 
 - Cuando es muchos a muchos, la relación se transforma en una tabla nueva.
+- Las demás tablas se mantienen.
 
 #### Entidad-Relacion N:N
+
 <p align="center">
   <img src="img/casoNN_1.png" alt="Descripción" width="80%">
 </p>
-
 
 #### Relacional
 
@@ -370,14 +461,10 @@ Corrección ✅
   <img src="img/casoNN_2.png" alt="Descripción" width="80%">
 </p>
 
-
-
 ## SQL
 
 ## Referencias
 
-
 Elmasri, R., & Navathe, S. (2007). Fundamentos de sistemas de bases de datos. ADDISON WESLEY. https://ia802808.us.archive.org/8/items/fundamentosdesistemasdebasesdedatos/Fundamentos-de-Sistemas-de-Bases-de-Datos.pdf página 7
 
 Gomstyn, A., & Jonker, A. (2025, 27 noviembre). Normalización de bases de datos. IBM. https://www.ibm.com/mx-es/think/topics/database-normalization
-
