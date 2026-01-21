@@ -20,7 +20,7 @@
    - 4.1 [Caso de 1:1](#caso-de-11)
    - 4.2 [Caso de 1:N](#caso-de-1n)
    - 4.3 [Caso de N:M](#caso-de-nm)
-5. [**SQL**](#sql)
+   
 6. [**Referencias**](#referencias)
 
 ---
@@ -461,7 +461,6 @@ Modelo relacional
   <img src="img/casoNN_2.png" alt="Descripción" width="80%">
 </p>
 
-## SQL
 
 ## Referencias
 
