@@ -1,6 +1,5 @@
 # Base de datos: cardinalidad, normalización, transformación de ER-Relacional y SQL.
 
-
 ## Índice de Contenidos
 
 1. [**Cardinalidad de una relación**](#cardinalidad-de-una-relación)
@@ -20,7 +19,23 @@
    - 4.1 [Caso de 1:1](#caso-de-11)
    - 4.2 [Caso de 1:N](#caso-de-1n)
    - 4.3 [Caso de N:M](#caso-de-nm)
-   
+
+5. [**SQL**](#sql)
+- 5.1 [DDL (Lenguaje de definición de datos)](#ddl-lenguaje-de-definición-de-datos)
+   - 5.2 [DML (Lenguaje de manipulación de datos)](#lenguaje-de-manipulación-de-datos)
+   - 5.3 [Roles, usuarios y permisos](#roles-usuarios-y-permisos)
+   - 5.4 [Programación: Procedimientos, Funciones y Triggers](#creación-de-un-procedimiento-almacenado)
+   - 5.5 [Transacciones y Control de Flujo](#transacciones)
+   - 5.6 [Cláusulas, Operadores y Paginación](#cláusulas)
+   - 5.7 [JOINS y Operaciones de Conjuntos](#joins)
+     - 5.7.1 [Inner Join (Intersección $A \cap B$)](#inner-join)
+     - 5.7.2 [Left Join ($A \text{ ⟕ } B$)](#left-join)
+     - 5.7.3 [Right Join ($A \text{ ⟖ } B$)](#right-join)
+     - 5.7.4 [Full Join (Unión $A \cup B$)](#full-join)
+     - 5.7.5 [Left Anti Join (Diferencia $A - B$)](#left-anti-join-excluding)
+     - 5.7.6 [Right Anti Join (Diferencia $B - A$)](#right-anti-join-excluding)
+     - 5.7.7 [Cross Join (Producto Cartesiano $A \times B$)](#cross-join-producto-cartesiano)
+     - 5.7.8 [Diferencia Simétrica ($A \Delta B$)](#diferencia-simétrica)
 6. [**Referencias**](#referencias)
 
 ---
@@ -99,7 +114,6 @@ Ejemplo
 
 - Un PEDIDO pertenece a un solo CLIENTE
 
-
         1. Identificar las entidades (PEDIDOS Y CLIENTE)
         2. Identificar la relación (Realiza o pertence)
         3. Comprobar el mínimo y máximo de cada entidad.
@@ -115,8 +129,6 @@ El resultado debe ser el siguiente:
 <p align="center">
   <img src="img/def2.png" alt="Descripción" width="100%">
 </p>
-
-
 
 ## Normalización de una base de datos
 
@@ -459,6 +471,800 @@ Modelo relacional
 
 <p align="center">
   <img src="img/casoNN_2.png" alt="Descripción" width="80%">
+</p>
+
+## SQL
+
+### DDL (Lenguaje de definción de datos)
+
+#### Creación de una base de datos
+
+```sql
+CREATE DATABASE baseDatos;
+```
+
+#### Creación de una tabla
+
+```sql
+CREATE TABLE cliente (
+    id_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(100) UNIQUE
+);
+
+/*Tabla con relación*/
+
+CREATE TABLE pedido (
+    id_pedido INT AUTO_INCREMENT PRIMARY KEY,
+    fecha DATE,
+    id_cliente INT,
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente)
+);
+
+/*Tabla con eliminación en cascada*/
+
+CREATE TABLE pedido (
+    id_pedido INT AUTO_INCREMENT PRIMARY KEY,
+    fecha DATE,
+    id_cliente INT,
+    FOREIGN KEY (id_cliente)
+        REFERENCES cliente(id_cliente)
+        ON DELETE CASCADE
+);
+```
+
+#### Creación de índices
+
+```sql
+/*Indice normal*/
+ALTER TABLE usuario
+ADD INDEX idx_nombre (nombre);
+
+/*Indice único*/
+ALTER TABLE usuario
+ADD UNIQUE idx_correo (correo);
+
+/*Indice compuesto*/
+ALTER TABLE venta
+ADD INDEX idx_cliente_fecha (id_cliente, fecha);
+
+/*Mostra índices*/
+SHOW INDEX FROM usuario;
+
+/*Eliminar un indice*/
+DROP INDEX idx_nombre ON usuario;
+
+/*Índice para búsquedas de textos*/
+ALTER TABLE articulo
+ADD FULLTEXT idx_fulltext_articulo (titulo, contenido);
+
+
+/*EJEMPLO DE USO FULLTEXT*/
+
+SELECT *
+FROM articulo
+WHERE MATCH(titulo, contenido)
+AGAINST ('mysql');
+
+
+```
+
+#### Modificación de columnas en tablas
+
+```sql
+/*Agregar columna*/
+ALTER TABLE cliente
+ADD telefono VARCHAR(20);
+
+/*Modificar columna*/
+ALTER TABLE cliente
+MODIFY telefono VARCHAR(30) NOT NULL;
+
+
+/*Cambiar el nombre*/
+ALTER TABLE cliente
+CHANGE telefono celular VARCHAR(30);
+
+
+/*Eliminar columna*/
+ALTER TABLE cliente
+DROP telefono;
+
+```
+
+#### Cambiar el nombre a una tabla
+
+```SQL
+RENAME TABLE cliente TO clientes;
+```
+
+#### Eliminar base de datos y tabla
+
+```SQL
+/*BD*/
+DROP DATABASE Tabla;
+
+/*Tabla*/
+DROP TABLE tabla;
+```
+
+#### Eliminar datos de una tabla
+
+```SQL
+/*Borrar todas las filas y su estructura*/
+TRUNCATE TABLE tabla;
+
+/*Borrar todo si la estructura*/
+DELETE FROM tabla;
+```
+
+### Lenguaje de manipulación de datos
+
+#### UPDATE
+
+```SQL
+UPDATE tabla
+SET columna = 'Juan Perez';
+```
+
+#### INSERT
+
+```SQL
+INSERT INTO tabla (columna1, columna2)
+VALUES ('Juan Pérez', 'juan@mail.com');
+
+-- Otra forma
+INSERT INTO Tabla (columna1, columna2) SELECT 'Juan Pérez', 'juan@mail.com';
+
+
+```
+
+#### DELETE
+
+```SQL
+DELETE FROM cliente
+WHERE id_cliente = 3;
+```
+
+#### SELECT
+
+```SQL
+SELECT col1, col2 FROM tabla WHERE col2 = '2';
+```
+
+### Roles, usuarios y permisos.
+
+#### Creación de un rol
+
+```SQL
+CREATE ROLE rol_lectura;
+```
+
+#### Asignación de permisos a un rol
+
+```SQL
+GRANT SELECT ON mi_base_datos.* TO rol_lectura;
+
+
+
+/*Dar permiso el uso de un procedimiento*/
+GRANT EXECUTE
+ON PROCEDURE mi_base_datos.sp_listar_clientes
+TO rol_lectura;
+
+/*Ver permisos*/
+SHOW GRANTS FOR rol_lectura;
+```
+
+| Categoría      | Permisos                       |
+| -------------- | ------------------------------ |
+| DML            | SELECT, INSERT, UPDATE, DELETE |
+| DDL            | CREATE, DROP, ALTER, TRUNCATE  |
+| Índices        | INDEX                          |
+| Vistas         | CREATE VIEW, SHOW VIEW         |
+| Rutinas        | EXECUTE                        |
+| Triggers       | TRIGGER                        |
+| Administración | ALL, GRANT OPTION              |
+
+### Creación de un procedimiento almacenado
+
+```SQL
+CREATE PROCEDURE obtener_cliente(IN p_id INT)
+BEGIN
+    SELECT *
+    FROM cliente
+    WHERE id_cliente = p_id;
+END$$
+
+DELIMITER ;
+```
+
+### Creación de un procedimiento almacenado
+
+```SQL
+CREATE PROCEDURE obtener_cliente(IN p_id INT)
+BEGIN
+    SELECT *
+    FROM cliente
+    WHERE id_cliente = p_id;
+END$$
+
+DELIMITER ;
+
+/*LLamar un procedimieto almacenado*/
+CALL obtener_cliente(1);
+
+```
+
+### Procedimiento con validaciones
+
+```SQL
+DELIMITER $$
+
+CREATE PROCEDURE transferencia()
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SELECT 'Error, rollback ejecutado';
+    END;
+
+    START TRANSACTION;
+
+    IF (SELECT saldo FROM cuenta WHERE id = 1) < 100 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Fondos insuficientes';
+    END IF;
+
+    UPDATE cuenta SET saldo = saldo - 100 WHERE id = 1;
+    UPDATE cuenta SET saldo = saldo + 100 WHERE id = 2;
+
+    COMMIT;
+END$$
+
+DELIMITER ;
+
+```
+
+### Funciones
+
+```SQL
+DELIMITER $$
+
+CREATE FUNCTION calcular_iva(precio DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    RETURN precio * 0.13;
+END$$
+
+DELIMITER ;
+
+/*Usar la función*/
+SELECT calcular_iva(100);
+```
+
+### Vistas
+
+```SQL
+/*Crear una vista*/
+CREATE VIEW vista_clientes AS
+SELECT id_cliente, nombre, correo
+FROM cliente;
+
+/*Usar la vista*/
+SELECT * FROM vista_clientes;
+
+/*Eliminar la vista*/
+DROP VIEW vista_clientes;
+```
+
+### Triggers
+
+#### Despues de un evento
+
+```SQL
+DELIMITER $$
+
+CREATE TRIGGER trg_usuario_update
+AFTER UPDATE ON usuario
+FOR EACH ROW
+BEGIN
+    INSERT INTO log_cambios(descripcion)
+    VALUES ('Usuario actualizado');
+END$$
+
+DELIMITER ;
+```
+
+#### Antes de un evento
+
+```SQL
+CREATE TRIGGER trg_before_update
+BEFORE UPDATE ON producto
+FOR EACH ROW
+SET NEW.precio = NEW.precio * 1.10;
+
+```
+
+#### Trigger llamado un procedimiento
+
+```SQL
+DELIMITER $$
+
+CREATE TRIGGER trg_after_insert_usuario
+AFTER INSERT ON usuario
+FOR EACH ROW
+BEGIN
+    CALL registrar_log(CONCAT('Usuario creado: ', NEW.nombre));
+END$$
+
+DELIMITER ;
+
+```
+
+### Transacciones
+
+```sql
+START TRANSACTION;
+
+UPDATE cuenta
+SET saldo = saldo - 100
+WHERE id_cuenta = 1;
+
+UPDATE cuenta
+SET saldo = saldo + 100
+WHERE id_cuenta = 2;
+
+COMMIT;
+```
+
+#### Anular o cancelar cambios con rollback
+
+```sql
+START TRANSACTION;
+
+UPDATE cuenta SET saldo = saldo - 100 WHERE id = 1;
+UPDATE cuenta SET saldo = saldo + 100 WHERE id = 2;
+
+ROLLBACK; /*Ningún dato se modifica*/
+```
+
+### Condicionales IF-ELSE
+
+```sql
+IF saldo < 0 THEN
+   SIGNAL SQLSTATE '45000'
+   SET MESSAGE_TEXT = 'Saldo inválido';
+END IF;
+```
+
+### Tablas temporales
+
+```SQL
+CREATE TEMPORARY TABLE temp_ventas (
+    id INT,
+    total DECIMAL(10,2)
+);
+
+/*CTes*/
+WITH nombre_cte AS (
+    SELECT columnas
+    FROM tabla
+)
+SELECT *
+FROM nombre_cte;
+```
+
+### Variables
+
+```SQL
+
+/*Para fuera de procedimientos y funciones*/
+SET @contador = 10;
+SELECT @contador;
+
+/*Dentro de procedimiento*/
+DECLARE total INT;
+SET total = 100;
+
+/*Con select*/
+SELECT COUNT(*) INTO total FROM cliente;
+```
+
+### BUCLE FOR
+
+```SQL
+DELIMITER $$
+
+CREATE PROCEDURE ejemplo_for()
+BEGIN
+    DECLARE i INT;
+
+    FOR i IN 1..5 DO
+        SELECT i;
+    END FOR;
+END$$
+
+DELIMITER ;
+```
+
+### Cláusulas
+
+- **SELECT**: define qué columnas se muestran
+- **DISTINCT**: elimina filas duplicadas
+- **FROM**: indica la tabla de origen
+- **JOIN / ON**: une tablas relacionadas
+- **WHERE**: filtra filas
+- **GROUP BY**: agrupa resultados
+- **HAVING**: filtra grupos
+- **ORDER BY**: ordena el resultado
+- **LIMIT / OFFSET**: limita la cantidad de filas
+
+### Operadores
+
+- **LIKE**: busca patrones en texto
+- **IN**: compara con una lista de valores
+- **BETWEEN**: verifica si un valor está en un rango
+- **IS NULL**: verifica si el valor es nulo
+- **IS NOT NULL**: verifica si no es nulo
+- **=**: igual a
+- **<> / !=**: diferente de
+- **>**: mayor que
+- **<**: menor que
+- **>=**: mayor o igual
+- **<=**: menor o igual
+- **EXISTS**: verifica si una subconsulta devuelve filas
+- **ANY / SOME**: compara con cualquier valor de una subconsulta
+- **ALL**: compara con todos los valores de una subconsulta
+
+### Ejemplo de uso de GROUP BY
+
+| id_venta | cliente | total |
+| -------- | ------- | ----- |
+| 1        | Ana     | 100   |
+| 2        | Juan    | 200   |
+| 3        | Ana     | 150   |
+| 4        | Juan    | 300   |
+| 5        | Luis    | 50    |
+
+Consulta
+
+```SQL
+SELECT cliente, SUM(total) AS total_compras
+FROM ventas
+GROUP BY cliente;
+```
+
+Resultado
+
+| cliente | total_compras |
+| ------- | ------------- |
+| Ana     | 250           |
+| Juan    | 500           |
+| Luis    | 50            |
+
+### EJemplode paginación con OFFSET
+
+| id_producto | nombre     | precio |
+| ----------- | ---------- | ------ |
+| 1           | Lapiz      | 10     |
+| 2           | Cuaderno   | 20     |
+| 3           | Borrador   | 5      |
+| 4           | Resaltador | 15     |
+| 5           | Tijeras    | 25     |
+| 6           | Pegamento  | 12     |
+
+Página 1 con dos registros
+
+```SQL
+SELECT *
+FROM productos
+ORDER BY id_producto
+LIMIT 2 OFFSET 0;
+
+```
+
+Resultado:
+| id_producto | nombre | precio |
+| ----------- | -------- | ------ |
+| 1 | Lapiz | 10 |
+| 2 | Cuaderno | 20 |
+
+Página 2 con dos registros
+
+```SQL
+SELECT *
+FROM productos
+ORDER BY id_producto
+LIMIT 2 OFFSET 2;
+
+```
+
+Resultado:
+
+| id_producto | nombre     | precio |
+| ----------- | ---------- | ------ |
+| 3           | Borrador   | 5      |
+| 4           | Resaltador | 15     |
+
+### Uso del Having para filtrar
+
+| cliente | total |
+| ------- | ----- |
+| Ana     | 100   |
+| Ana     | 150   |
+| Juan    | 200   |
+| Juan    | 300   |
+| Luis    | 50    |
+
+```SQL
+SELECT cliente, SUM(total) AS total_compras
+FROM ventas
+GROUP BY cliente
+HAVING SUM(total) > 200;
+```
+
+Resultado:
+
+| cliente | total_compras |
+| ------- | ------------- |
+| Ana     | 250           |
+| Juan    | 500           |
+
+### Uso del Between para filtrar
+
+| id_producto | nombre     | precio |
+| ----------- | ---------- | ------ |
+| 1           | Lapiz      | 10     |
+| 2           | Cuaderno   | 20     |
+| 3           | Borrador   | 5      |
+| 4           | Resaltador | 15     |
+| 5           | Tijeras    | 25     |
+
+```SQL
+SELECT *
+FROM productos
+WHERE precio BETWEEN 10 AND 20;
+```
+
+Resultado
+
+| id_producto | nombre     | precio |
+| ----------- | ---------- | ------ |
+| 1           | Lapiz      | 10     |
+| 2           | Cuaderno   | 20     |
+| 4           | Resaltador | 15     |
+
+### Uso del LIKE
+
+```SQL
+WHERE nombre LIKE 'Ana%'   -- Empieza con "Ana"
+WHERE nombre LIKE '%Pérez' -- Termina con "Pérez"
+WHERE nombre LIKE 'A_a%'   -- Empieza con A, cualquier letra en medio, luego 'a'
+```
+
+### Uso del IN
+
+```PostgreSQL
+-- Buscar clientes que estén en Madrid o Sevilla
+SELECT *
+FROM clientes
+WHERE ciudad IN ('Madrid', 'Sevilla');
+
+```
+
+### Subconsultas
+
+#### ANY o SOME
+
+```SQL
+-- Seleccionar productos cuyo precio sea mayor que **alguno** de estos valores
+SELECT *
+FROM producto
+WHERE precio > ANY (SELECT precio FROM oferta);
+
+```
+
+#### ALL
+
+```SQL
+-- Seleccionar productos cuyo precio sea mayor que **todos** los precios de la subconsulta
+SELECT *
+FROM producto
+WHERE precio > ALL (SELECT precio FROM oferta);
+```
+
+### JOINS
+
+
+<p align="center">
+  <img src="img/unionInner.png" alt="Descripción" width="80%">
+</p>
+
+#### INNER JOIN
+
+$$A \cap B$$
+
+
+```SQL
+SELECT A.nombre, B.producto
+FROM TablaA AS A
+INNER JOIN TablaB AS B ON A.id = B.id;
+```
+
+
+<p align="center">
+  <img src="img/inner.png" alt="Descripción" width="80%">
+</p>
+
+#### LEFT JOIN
+$$A \cup (A \cap B)$$
+
+```sql
+
+SELECT A.nombre, B.producto
+FROM TablaA AS A
+LEFT JOIN TablaB AS B ON A.id = B.id;
+
+```
+<p align="center">
+  <img src="img/left.png" alt="Descripción" width="80%">
+</p>
+
+#### RIGHT JOIN
+
+
+$$B \cup (A \cap B)$$
+
+```SQL
+SELECT A.nombre, B.producto
+FROM TablaA AS A
+RIGHT JOIN TablaB AS B ON A.id = B.id;
+```
+
+<p align="center">
+  <img src="img/right.png" alt="Descripción" width="80%">
+</p>
+
+#### FULL JOIN
+
+**$$FULL JOIN = LEFT JOIN \cup RIGHT JOIN$$**
+
+
+```SQL
+SELECT
+    A.id,
+    A.valor_A,
+    B.valor_B
+FROM A
+LEFT JOIN B ON A.id = B.id
+
+UNION
+
+SELECT
+    A.id,
+    A.valor_A,
+    B.valor_B
+FROM A
+RIGHT JOIN B ON A.id = B.id;
+```
+
+<p align="center">
+  <img src="img/full.png" alt="Descripción" width="80%">
+</p>
+
+
+#### RIGHT ANTI JOIN (EXCLUDING)
+
+$$B - (A \cap B) \quad \text{o simplemente} \quad B - A$$
+
+```SQL
+SELECT b.*
+FROM TableA a
+RIGHT JOIN TableB b
+  ON a.id = b.id
+WHERE a.id IS NULL;
+```
+
+<p align="center">
+  <img src="img/antiRight.png" alt="Descripción" width="80%">
+</p>
+
+
+
+
+#### LEFT ANTI JOIN (EXCLUDING)
+
+$$A - B$$
+
+```SQL
+SELECT a.*
+FROM TableA a
+LEFT JOIN TableB b
+  ON a.id = b.id
+WHERE b.id IS NULL;
+
+-- Otra forma
+SELECT *
+FROM TableA a
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM TableB b
+  WHERE b.id = a.id
+);
+
+```
+
+
+<p align="center">
+  <img src="img/antiLeft.png" alt="Descripción" width="80%">
+</p>
+
+
+
+#### CROSS JOIN (Producto Cartesiano)
+$$A \times B$$
+
+```SQL
+SELECT * FROM A CROSS JOIN B;
+```
+<p align="center">
+  <img src="img/cross.png" alt="Descripción" width="80%">
+</p>
+
+
+#### DIFERENCIA SIMÉTRICA
+$$A \Delta B = (A - B) \cup (B - A)$$
+
+$$A \Delta B = (A \cup B) - (A \cap B)$$
+
+```sql
+-- Registros solo en A
+SELECT
+  a.Fecha,
+  a.CountryID,
+  a.Units,
+  NULL AS B_ID,
+  NULL AS B_COUNTRY
+FROM A a
+LEFT JOIN B b ON a.CountryID = b.ID
+WHERE b.ID IS NULL
+
+UNION
+
+-- Registros solo en B
+SELECT
+  NULL AS Fecha,
+  NULL AS CountryID,
+  NULL AS Units,
+  b.ID AS B_ID,
+  b.COUNTRY AS B_COUNTRY
+FROM B b
+LEFT JOIN A a ON b.ID = a.CountryID
+WHERE a.CountryID IS NULL;
+```
+
+Sin incluir todas las columnas
+```SQL
+
+-- A − B
+SELECT A.Fecha, A.CountryID, A.Units
+FROM A
+LEFT JOIN B ON A.CountryID = B.ID
+WHERE B.ID IS NULL
+
+UNION
+
+-- B − A
+SELECT NULL AS Fecha, B.ID AS CountryID, NULL AS Units
+FROM B
+LEFT JOIN A ON B.ID = A.CountryID
+WHERE A.CountryID IS NULL;
+```
+
+<p align="center">
+  <img src="img/symetric.png" alt="Descripción" width="80%">
 </p>
 
 
